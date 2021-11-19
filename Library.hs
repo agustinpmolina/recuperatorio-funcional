@@ -48,6 +48,8 @@ tieneFuturo pais valor = valores pais "Indice Educativo" > valor
 -- C ) Inventar una nueva función booleana que nos diga algo sobre un país, en la que se contemplen todos los indicadores.
 indices = ["Desocupacion","Deuda Externa","IVA","Reservas","Indice Educativo"]
 
+-- Un país despega si la suma de todos sus indicadores es mayor que su deuda externa + su desocupacion por 10000
+
 despegaPais :: Pais -> Bool
 despegaPais pais = sum ( map (valores pais) indices ) > ( valores pais "Deuda Externa") + (valores pais "Desocupacion")*10000
 
