@@ -48,8 +48,6 @@ tieneFuturo pais valor = valores pais "Indice Educativo" > valor
 -- C ) Inventar una nueva función booleana que nos diga algo sobre un país, en la que se contemplen todos los indicadores.
 indices = ["Desocupacion","Deuda Externa","IVA","Reservas","Indice Educativo"]
 
--- Un país despega si la suma de todos sus indicadores es mayor que su deuda externa + su desocupacion por 10000
-
 despegaPais :: Pais -> Bool
 despegaPais pais = sum ( map (valores pais) indices ) > ( valores pais "Deuda Externa") + (valores pais "Desocupacion")*10000
 
@@ -189,20 +187,21 @@ UnPais {nombre = "uganda", habitantes = 4200, indicadores = [("Deuda Externa",0)
 -- Esto implica que si luego de gobernar un período el 
 -- país está bien y verifica una cierta condición, la fuerza política es reelegida y gobierna por un período más
 
-gobiernaOtroPeriodo :: ( Pais -> Politico -> Bool) -> Pais -> Politico -> Bool
-gobiernaOtroPeriodo condicion pais politico = ( condicion pais politico ) && ( estaBien( transformar pais politico ))
+puedeGobernarOtroPeriodo :: ( Pais -> Politico -> Bool) -> Pais -> Politico -> Bool
+puedeGobernarOtroPeriodo condicion pais politico = ( condicion pais politico ) && ( estaBien( transformar pais politico ))
 
 
 otroPeriodo :: Pais -> Politico -> Pais
-otroPeriodo pais politico  | gobiernaOtroPeriodo ( condicion politico ) pais politico = transformar ( transformar pais politico ) politico
+otroPeriodo pais politico  | ( puedeGobernarOtroPeriodo ( condicion politico ) pais politico ) = transformar ( transformar pais politico ) politico
                            | otherwise = pais 
 
 
 -- máximo de relecciones 4, cada elemento de la lista de periodos representa un periodo de un politico
-
 periodosHormiga = periodos hormigaIgnorante
 
+-- Como debe devolver un pais luego de aplicar varias veces la transformación pais, luego de cada periodo del político, tengo que ir acumulando periodo por periodo y luego devolver como queda el país. 
+-- En caso que no se cumpla la condición de que pueda ser reelecto debe devolver el ultimo país ( función otroPeriodo )
+reeleccionesSucesivas pais politico = foldl1 (otroPeriodo pais) (periodos politico)
 
- 
 
 
