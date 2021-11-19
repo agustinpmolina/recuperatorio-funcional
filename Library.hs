@@ -58,6 +58,8 @@ listaPaises = [flandria, uganda, varsovia]
  
 funcion condicion paises = map nombre ( filter (\ x -> condicion x ) paises )
 
+-- *Spec> funcion estaBien [uganda,flandria,varsovia]
+-- ["uganda","Flandria","varsovia"]
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 data Politico = UnPolitico {
