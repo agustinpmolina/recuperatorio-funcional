@@ -205,3 +205,5 @@ reeleccionesSucesivas pais politico = foldl1 (otroPeriodo pais) (periodos politi
 
 
 
+
+
