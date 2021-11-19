@@ -18,7 +18,7 @@ data Pais = UnPais {
 -- descripción que indica de qué se trata.
 
 
-flandria = UnPais "Flandria" 4000 [("Desocupacion", 0.024),("Deuda Externa", 8000),("IVA", 0.21),("Reservas", 3000),("Indice Educativo", 100)]
+flandria = UnPais "Flandria" 4000 [("Desocupacion", 0.024),("Deuda Externa", 8000),("IVA", 0.21),("Reservas", 3000),("Indice Educativo", 100),("Futuro",85)]
 
 -- 1 ) Crecimiento vegetativo: la población del país aumenta cada período un 5%. Hacer la función que permita que crezca la población del país durante un período.
 crecimientoVegetativo :: Pais -> Pais
@@ -62,7 +62,9 @@ funcion condicion paises = map nombre ( filter (\ x -> condicion x ) paises )
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 data Politico = UnPolitico {
     nombreP :: String,
-    transformacion :: Pais -> Pais
+    transformacion :: Pais -> Pais,
+    periodos :: [Politico],
+    condicion :: (Pais -> Politico -> Bool)
 } deriving (Show, Eq, Ord)
 
 menosTupla :: Pais -> String -> [(String,Number)]
@@ -88,7 +90,9 @@ bajarDesocupacion pais = pais { indicadores = f  (restarUno) ( tupla "Desocupaci
 descocupacionPorEncimaDeDiez :: Pais -> Bool
 descocupacionPorEncimaDeDiez pais = valores pais "Desocupacion" > 10 
 
-hormigaIgnorante = UnPolitico "Hormiga Ignorante" transformacionHormiga
+hormigaIgnorante = UnPolitico "Hormiga Ignorante" transformacionHormiga [hormigaIgnorante,hormigaIgnorante,hormigaIgnorante] condicionHormigaIgnorante
+
+condicionHormigaIgnorante pais _ = valores pais "Futuro" == 85
 
 transformacionHormiga :: Pais -> Pais
 transformacionHormiga pais | valores pais "Desocupacion" > 10 = (bajarDesocupacion.deteriorarEducacion) pais
@@ -108,11 +112,12 @@ poneElIvaEnVeinticuatro pais = pais { indicadores = f  (ivaEnVeintiCuatro) ( tup
 mejoraEducacion :: Pais -> Pais
 mejoraEducacion pais = pais { indicadores = f  (cuarentaPorciento) ( tupla "Indice Educativo" pais): (menosTupla pais "Indice Educativo" ) }
 
-eduqueitor = UnPolitico "Eduqueitor" transformacionEduqueitor
+eduqueitor = UnPolitico "Eduqueitor" transformacionEduqueitor [eduqueitor,eduqueitor,eduqueitor,eduqueitor] condicionEduqueitor
 
 transformacionEduqueitor :: Pais -> Pais
 transformacionEduqueitor = (poneElIvaEnVeinticuatro.mejoraEducacion)
 
+condicionEduqueitor pais politico = True
 
 duplicar :: Number -> Number
 duplicar numero = 2 * numero
@@ -122,11 +127,13 @@ empiezaConD pais = head( filter(\(x,y) -> head x == 'D') (indicadores pais) )
 transformacionDuplicador :: Pais -> Pais
 transformacionDuplicador pais = pais { indicadores = f (duplicar) (empiezaConD pais):indicadores pais}
 
-duplicador = UnPolitico "Duplicador" transformacionDuplicador
+duplicador = UnPolitico "Duplicador" transformacionDuplicador [duplicador,duplicador,duplicador,duplicador] condicionDuplicador
 
+condicionDuplicador pais politico = False
 
+cazaBuitre = UnPolitico "Caza Buitre" transformacionCazaBuitre [cazaBuitre,cazaBuitre,cazaBuitre,cazaBuitre] condicionCazaBuitre
 
-cazaBuitre = UnPolitico "Caza Buitre" transformacionCazaBuitre
+condicionCazaBuitre pais politico = False
 
 transformacionCazaBuitre :: Pais -> Pais
 transformacionCazaBuitre pais = pais { indicadores = f (0*) (tupla "Deuda Externa" pais):(menosTupla pais "Deuda Externa")}
@@ -135,7 +142,9 @@ transformacionCazaBuitre pais = pais { indicadores = f (0*) (tupla "Deuda Extern
 -- Personal: Agregar una nueva forma de gobernar
 -- Gobierna el empresario qatarí,las reservas aumentan x500 y el desempleo desciende a 0
 
-qatari = UnPolitico "Qatari" transformacionQatari
+qatari = UnPolitico "Qatari" transformacionQatari [qatari,qatari,qatari,qatari] condicionQatari 
+
+condicionQatari pais politico = True
 
 transformacionPetrolera pais = pais { indicadores = f (500*) (tupla "Reservas" pais):(menosTupla pais "Reservas")}
 chauDesempleo pais = pais{ indicadores = f (0*) (tupla "Desocupacion" pais):(menosTupla pais "Desocupacion")}
@@ -170,5 +179,28 @@ UnPais {nombre = "uganda", habitantes = 4200, indicadores = [("Deuda Externa",0)
 -- el país cuando se retire del gobierno una determinada fuerza política luego de sus periodos de gobierno, 
 -- ya sea porque llegó al máximo de reelecciones permitidas o porque luego de algún período no verificó la 
 -- condición dada.  
--- Por ejemplo, se desa saber cómo quedará frandria luego que la gobierne la hormiga ignorante, con un máximo de 
+
+-- Por ejemplo, se desea saber cómo quedará frandria luego que la gobierne la hormiga ignorante, con un máximo de 
 -- 3 reelecciones y usando como criterio de reelección que tiene futuro con un valor de referencia 85.
+
+
+-- Esto implica que si luego de gobernar un período el 
+-- país está bien y verifica una cierta condición, la fuerza política es reelegida y gobierna por un período más
+
+gobiernaOtroPeriodo :: ( Pais -> Politico -> Bool) -> Pais -> Politico -> Bool
+gobiernaOtroPeriodo condicion pais politico = ( condicion pais politico ) && ( estaBien( transformar pais politico ))
+
+
+otroPeriodo :: Pais -> Politico -> Pais
+otroPeriodo pais politico  | gobiernaOtroPeriodo ( condicion politico ) pais politico = transformar ( transformar pais politico ) politico
+                           | otherwise = pais 
+
+
+-- máximo de relecciones 4, cada elemento de la lista de periodos representa un periodo de un politico
+
+periodosHormiga = periodos hormigaIgnorante
+
+
+ 
+
+
